@@ -62,7 +62,8 @@ class Aplicacao(tk.Tk):
         self.abas.add(aba, text="  1. Banco de Dados  ")
 
         tk.Label(aba, text="Execute os scripts na ordem: primeiro criar as "
-                           "tabelas, depois inserir os dados.",
+                           "tabelas, depois inserir os dados. Para comecar "
+                           "de novo, apague o banco antes.",
                  bg=COR_FUNDO, font=("Arial", 10)).pack(anchor="w",
                                                         padx=15, pady=(15, 10))
 
@@ -73,8 +74,8 @@ class Aplicacao(tk.Tk):
                   command=self.acao_criar).pack(side="left", padx=(0, 8))
         tk.Button(botoes, text="2) Inserir Dados (DML)", width=24,
                   command=self.acao_inserir).pack(side="left", padx=8)
-        tk.Button(botoes, text="Recriar Banco do Zero", width=24,
-                  command=self.acao_recriar).pack(side="left", padx=8)
+        tk.Button(botoes, text="Apagar Banco", width=24,
+                  command=self.acao_apagar).pack(side="left", padx=8)
 
         tk.Label(aba, text="Registros por tabela:", bg=COR_FUNDO,
                  font=("Arial", 10, "bold")).pack(anchor="w", padx=15,
@@ -94,6 +95,7 @@ class Aplicacao(tk.Tk):
             messagebox.showinfo("OK", "Tabelas criadas com sucesso.")
             self.avisar("Script de criacao executado.")
             self.atualizar_status_banco()
+            self.carregar_terreiros_combo()
         except Exception as erro:
             messagebox.showerror("Erro ao criar tabelas", str(erro))
 
@@ -107,21 +109,24 @@ class Aplicacao(tk.Tk):
         except Exception as erro:
             messagebox.showerror("Erro ao inserir dados", str(erro))
 
-    def acao_recriar(self):
+    def acao_apagar(self):
         if not messagebox.askyesno("Confirmar",
-                                   "Isso apaga o banco e cria tudo de novo. "
-                                   "Continuar?"):
+                                   "Isso apaga todas as tabelas e dados do "
+                                   "banco. Continuar?"):
             return
         try:
             banco.apagar_banco()
-            banco.criar_tabelas()
-            banco.inserir_dados()
-            messagebox.showinfo("OK", "Banco recriado com os dados iniciais.")
-            self.avisar("Banco recriado.")
+            messagebox.showinfo("OK", "Banco apagado. Agora use o botao "
+                                      "'1) Criar Tabelas (DDL)'.")
+            self.avisar("Banco apagado.")
             self.atualizar_status_banco()
-            self.carregar_terreiros_combo()
+            # limpa a aba de cadastro, que ainda mostrava os dados antigos
+            self.terreiros = []
+            self.combo_terreiro["values"] = []
+            self.combo_terreiro.set("")
+            self.preencher_tabela(self.tabela_membros, [], [])
         except Exception as erro:
-            messagebox.showerror("Erro ao recriar banco", str(erro))
+            messagebox.showerror("Erro ao apagar banco", str(erro))
 
     def atualizar_status_banco(self):
         for item in self.tabela_status.get_children():

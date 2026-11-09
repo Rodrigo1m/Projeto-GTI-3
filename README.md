@@ -96,7 +96,8 @@ Na primeira execução, vá até a aba **1. Banco de Dados** e clique nos botõe
 | 2 | `2) Inserir Dados (DML)` | Executa `scripts/inserir_dados_tabelas.sql` |
 
 O banco é salvo em `terreiros_saude.db`, na própria pasta do projeto.
-O botão **Recriar Banco do Zero** apaga tudo e refaz os dois passos.
+O botão **Apagar Banco** remove todas as tabelas e dados. Depois disso, é só
+repetir os passos 1 e 2 para montar o banco de novo.
 
 > [!IMPORTANT]
 > As consultas `b3` e `b4` usam `RIGHT OUTER JOIN` e `FULL OUTER JOIN`, suportados
