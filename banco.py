@@ -119,3 +119,102 @@ def contar_registros():
             total = con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
             resultado.append((t, total))
     return resultado
+
+
+# ======================================================================
+# CADASTRO DE TERREIROS E ATRIBUICAO DE MEMBROS
+# ======================================================================
+def criar_terreiro(nome, religiao, nacao, regente, ano_fundacao,
+                   logradouro, id_bairro, cep, latitude, longitude,
+                   id_lideranca=None, nova_lideranca=None):
+    """Cria endereco (+ lideranca nova, se informada) e o terreiro.
+
+    Tudo numa transacao so: se algo falhar nada fica gravado pela metade.
+    Devolve o id do terreiro criado.
+    """
+    with closing(conectar()) as con:
+        try:
+            if nova_lideranca:
+                cur = con.execute(
+                    "INSERT INTO lideranca_religiosa (nome) VALUES (?)",
+                    (nova_lideranca,))
+                id_lideranca = cur.lastrowid
+            cur = con.execute(
+                """INSERT INTO endereco
+                       (logradouro, id_bairro, cep, latitude, longitude)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (logradouro, id_bairro, cep or None, latitude, longitude))
+            id_endereco = cur.lastrowid
+            cur = con.execute(
+                """INSERT INTO terreiro
+                       (nome, id_lideranca, id_endereco, religiao, nacao,
+                        regente, ano_fundacao)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (nome, id_lideranca, id_endereco, religiao, nacao, regente,
+                 ano_fundacao))
+            con.commit()
+            return cur.lastrowid
+        except Exception:
+            con.rollback()
+            raise
+
+
+def excluir_terreiro(id_terreiro):
+    """Exclui um terreiro que nao tenha membros (e o endereco dele)."""
+    with closing(conectar()) as con:
+        qtd = con.execute(
+            "SELECT COUNT(*) FROM membro_terreiro WHERE id_terreiro = ?",
+            (id_terreiro,)).fetchone()[0]
+        if qtd:
+            raise RuntimeError(
+                f"O terreiro ainda tem {qtd} membro(s). Atribua-os a outro "
+                "terreiro antes de excluir.")
+        linha = con.execute(
+            "SELECT id_endereco FROM terreiro WHERE id_terreiro = ?",
+            (id_terreiro,)).fetchone()
+        con.execute("DELETE FROM terreiro WHERE id_terreiro = ?",
+                    (id_terreiro,))
+        if linha:
+            # so apaga o endereco se mais ninguem usa
+            em_uso = con.execute(
+                "SELECT (SELECT COUNT(*) FROM terreiro WHERE id_endereco=?)"
+                " + (SELECT COUNT(*) FROM unidade_saude WHERE id_endereco=?)",
+                (linha[0], linha[0])).fetchone()[0]
+            if not em_uso:
+                con.execute("DELETE FROM endereco WHERE id_endereco = ?",
+                            (linha[0],))
+        con.commit()
+
+
+def atribuir_membros(ids_membros, id_terreiro):
+    """Move os membros informados para o terreiro escolhido."""
+    with closing(conectar()) as con:
+        con.executemany(
+            "UPDATE membro_terreiro SET id_terreiro = ? WHERE id_membro = ?",
+            [(id_terreiro, m) for m in ids_membros])
+        con.commit()
+
+
+def vincular_membro_unidade(id_membro, id_unidade):
+    """Registra o membro numa unidade de saude (se ainda nao estiver)."""
+    with closing(conectar()) as con:
+        ja = con.execute(
+            "SELECT 1 FROM membro_unidade_saude "
+            "WHERE id_membro = ? AND id_unidade = ?",
+            (id_membro, id_unidade)).fetchone()
+        if ja:
+            raise RuntimeError("Esse membro já está vinculado a essa "
+                               "unidade de saúde.")
+        con.execute("INSERT INTO membro_unidade_saude (id_membro, id_unidade)"
+                    " VALUES (?, ?)", (id_membro, id_unidade))
+        con.commit()
+
+
+def remover_membro(id_membro):
+    """Apaga o membro e os vinculos dele com unidades de saude."""
+    with closing(conectar()) as con:
+        con.execute("DELETE FROM membro_unidade_saude WHERE id_membro = ?",
+                    (id_membro,))
+        con.execute("DELETE FROM membro_terreiro WHERE id_membro = ?",
+                    (id_membro,))
+        con.commit()

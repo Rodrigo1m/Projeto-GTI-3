@@ -82,11 +82,16 @@ e-mails e siglas, e `CHECK` em `ano_fundacao > 1500` e `regiao_rpa > 0`.
 
 ## 🚀 Como executar
 
-> **Pré-requisito:** apenas o **Python 3** (Tkinter e SQLite já vêm incluídos).
+> **Pré-requisitos:** **Python 3** (Tkinter e SQLite já vêm incluídos) e as
+> bibliotecas de gráficos e mapa:
 
 ```bash
+pip install -r requirements.txt
 python app.py
 ```
+
+> Sem o `tkintermapview` o app continua funcionando: o mapa vira um gráfico
+> simples de pontos (sem ruas). O mapa com ruas precisa de internet.
 
 Na primeira execução, vá até a aba **1. Banco de Dados** e clique nos botões na ordem:
 
@@ -112,12 +117,39 @@ repetir os passos 1 e 2 para montar o banco de novo.
 
 ## 🖥️ Funcionalidades da aplicação
 
+Ao abrir o app aparece uma **tela de login sem senha** com dois perfis.
+O botão **Sair** no cabeçalho volta para essa tela.
+
+### 🌿 Perfil Terreiro
+
+O terreiro escolhe o próprio nome na lista e vê só os seus dados.
+
 | Aba | Para que serve |
 |---|---|
-| **1. Banco de Dados** | Executa os scripts DDL/DML e mostra quantos registros há em cada tabela |
-| **2. Consultas (DQL)** | Lista as consultas do trabalho; ao selecionar, o SQL aparece num editor (pode ser alterado antes de rodar) e o resultado é exibido em tabela |
-| **3. Cadastrar Membro** | Formulário que grava um novo membro de terreiro no banco (persistência de dados) |
-| **4. SQL Livre** | Campo para digitar e executar qualquer comando SQL |
+| **Meu Terreiro** | Ficha do terreiro (membros, quantos têm cadastro em unidade de saúde, unidade mais próxima, religião, regente, liderança), cadastro de pessoas, **vínculo de um membro a uma unidade de saúde** (as unidades aparecem da mais perto para a mais longe) e remoção de membros. Em vermelho, os membros sem cadastro em unidade |
+| **Saúde perto de mim** | Lista das unidades de saúde com distância, telefone e horário, e mapa ligando o terreiro às unidades dentro do raio escolhido |
+
+### 📊 Perfil Gestor
+
+O gestor tem dois modos no cabeçalho: **Painel** e **Administração**.
+
+**Administração**
+
+| Aba | Para que serve |
+|---|---|
+| **Banco de Dados** | Executa os scripts DDL/DML e mostra quantos registros há em cada tabela |
+| **Terreiros** | Cadastra terreiros (com liderança, endereço e local escolhido no mapa), exclui terreiros sem membros e **atribui pessoas** a um terreiro — movendo membros de outros terreiros ou adicionando pessoas novas |
+| **Membros** | Formulário completo de cadastro de membro |
+| **Consultas (DQL)** | Lista as consultas do trabalho; o SQL pode ser alterado antes de rodar |
+| **SQL Livre** | Campo para digitar e executar qualquer comando SQL |
+
+**Painel**
+
+| Aba | Para que serve |
+|---|---|
+| **Visão Geral** | Indicadores (terreiros, membros, unidades, % de membros com cadastro em unidade, distância média) e gráficos: membros por terreiro com/sem cadastro, distância até a unidade mais próxima, faixa etária e membros vinculados por unidade. Passe o mouse nas barras para ver detalhes |
+| **Mapa** | Mapa com terreiros (laranja) e unidades de saúde (azul). Ao escolher um terreiro, lista e liga no mapa as unidades dentro do raio escolhido |
+| **Proximidade** | Tabela com as 2 unidades mais próximas de cada terreiro e quantas existem em até 2 km (em vermelho os terreiros sem nenhuma) |
 
 ---
 
@@ -145,7 +177,10 @@ repetir os passos 1 e 2 para montar o banco de novo.
 ```
 Projeto-GTI-3/
 ├── app.py                          # Interface gráfica (Tkinter)
-├── banco.py                        # Conexão com o SQLite e execução de scripts/consultas
+├── banco.py                        # Conexão com o SQLite, scripts e cadastro de terreiros
+├── painel.py                       # Dados do Painel do Gestor (indicadores e distâncias)
+├── tema.py                         # Cores e estilos da interface
+├── requirements.txt                # matplotlib e tkintermapview
 ├── consultas.py                    # As 12 consultas DQL do trabalho
 ├── terreiros_saude.db              # Banco gerado pela aplicação
 └── scripts/
