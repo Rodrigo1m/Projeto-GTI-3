@@ -82,16 +82,57 @@ e-mails e siglas, e `CHECK` em `ano_fundacao > 1500` e `regiao_rpa > 0`.
 
 ## 🚀 Como executar
 
-> **Pré-requisitos:** **Python 3** (Tkinter e SQLite já vêm incluídos) e as
-> bibliotecas de gráficos e mapa:
+O projeto tem **duas versões com as mesmas funções**:
+
+| Versão | Arquivo | Para quê |
+|---|---|---|
+| 🌐 **Web** (Streamlit) | `streamlit_app.py` | Roda no navegador e pode ser publicada na internet |
+| 🖥️ **Desktop** (Tkinter) | `app.py` | Programa com janela, roda só no computador |
+
+### 🌐 Versão web (local)
 
 ```bash
 pip install -r requirements.txt
-python app.py
+streamlit run streamlit_app.py
 ```
 
-> Sem o `tkintermapview` o app continua funcionando: o mapa vira um gráfico
-> simples de pontos (sem ruas). O mapa com ruas precisa de internet.
+O navegador abre em `http://localhost:8501`. Se o banco ainda não existir,
+a versão web cria as tabelas e insere os dados sozinha.
+
+### ☁️ Publicar na internet (Streamlit Community Cloud — grátis)
+
+> O **Vercel não serve** para este projeto: ele só hospeda sites com uma
+> variável `app` web (Flask/FastAPI). Por isso aparece o erro
+> *"does not export a top-level app"*.
+
+1. Envie o projeto para o GitHub (com `streamlit_app.py`, `requirements.txt`,
+   a pasta `.streamlit/`, `scripts/` e `terreiros_saude.db`).
+2. Acesse **https://share.streamlit.io** e entre com a conta do GitHub.
+3. Clique em **Create app** → **Deploy a public app from GitHub**.
+4. Escolha o repositório, a branch `main` e, em *Main file path*,
+   `streamlit_app.py`.
+5. Em **Advanced settings**, escolha **Python 3.12**.
+6. Clique em **Deploy**. Em alguns minutos o site ganha um endereço
+   `https://<nome>.streamlit.app`.
+
+> [!WARNING]
+> No Streamlit Cloud o arquivo `terreiros_saude.db` volta ao estado do
+> GitHub sempre que o servidor reinicia (após atualizações ou alguns dias
+> sem uso). Os cadastros feitos pelo site **não ficam salvos para sempre** —
+> serve para apresentação. Para guardar dados de verdade seria preciso um
+> banco hospedado (ex.: Postgres no Neon ou Supabase).
+
+> [!CAUTION]
+> O login não tem senha e o gestor tem a aba **SQL Livre**: qualquer pessoa
+> com o link pode apagar dados. Não coloque informações pessoais reais no
+> site público.
+
+### 🖥️ Versão desktop
+
+```bash
+pip install -r requirements-desktop.txt
+python app.py
+```
 
 Na primeira execução, vá até a aba **1. Banco de Dados** e clique nos botões na ordem:
 
@@ -176,11 +217,14 @@ O gestor tem dois modos no cabeçalho: **Painel** e **Administração**.
 
 ```
 Projeto-GTI-3/
-├── app.py                          # Interface gráfica (Tkinter)
+├── streamlit_app.py                # Versão web (Streamlit)
+├── .streamlit/config.toml          # Tema da versão web
+├── app.py                          # Versão desktop (Tkinter)
 ├── banco.py                        # Conexão com o SQLite, scripts e cadastro de terreiros
 ├── painel.py                       # Dados do Painel do Gestor (indicadores e distâncias)
 ├── tema.py                         # Cores e estilos da interface
-├── requirements.txt                # matplotlib e tkintermapview
+├── requirements.txt                # Dependências da versão web
+├── requirements-desktop.txt        # Dependências da versão desktop
 ├── consultas.py                    # As 12 consultas DQL do trabalho
 ├── terreiros_saude.db              # Banco gerado pela aplicação
 └── scripts/
